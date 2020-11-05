@@ -1,36 +1,10 @@
 // React.memo for reducing unnecessary re-renders
 // http://localhost:3000/isolated/exercise/03.js
 
-import * as React from 'react'
-import {useCombobox} from '../use-combobox'
-import {getItems} from '../workerized-filter-cities'
-import {useAsync, useForceRerender} from '../utils'
-
-function Menu({
-  items,
-  getMenuProps,
-  getItemProps,
-  highlightedIndex,
-  selectedItem,
-}) {
-  return (
-    <ul {...getMenuProps()}>
-      {items.map((item, index) => (
-        <ListItem
-          key={item.id}
-          getItemProps={getItemProps}
-          item={item}
-          index={index}
-          selectedItem={selectedItem}
-          highlightedIndex={highlightedIndex}
-        >
-          {item.name}
-        </ListItem>
-      ))}
-    </ul>
-  )
-}
-// 🐨 Memoize the Menu here using React.memo
+import * as React from 'react';
+import {useCombobox} from '../use-combobox';
+import {getItems} from '../workerized-filter-cities';
+import {useAsync, useForceRerender} from '../utils';
 
 function ListItem({
   getItemProps,
@@ -40,8 +14,8 @@ function ListItem({
   highlightedIndex,
   ...props
 }) {
-  const isSelected = selectedItem?.id === item.id
-  const isHighlighted = highlightedIndex === index
+  const isSelected = selectedItem?.id === item.id;
+  const isHighlighted = highlightedIndex === index;
   return (
     <li
       {...getItemProps({
@@ -54,19 +28,59 @@ function ListItem({
         ...props,
       })}
     />
-  )
+  );
 }
 // 🐨 Memoize the ListItem here using React.memo
+const MemoListItem = React.memo(ListItem, (prevProps, newProps) => {
+  const toIsSelected = props => props.selectedItem?.id === props.item.id;
+  const toIsHighlighted = props => props.highlightedIndex === props.index;
+
+  const needToReRender =
+    prevProps.getItemProps !== newProps.getItemProps ||
+    prevProps.item !== newProps.item ||
+    prevProps.index !== newProps.index ||
+    toIsSelected(prevProps) !== toIsSelected(newProps) ||
+    toIsHighlighted(prevProps) !== toIsHighlighted(newProps);
+
+  return !needToReRender;
+});
+
+function Menu({
+  items,
+  getMenuProps,
+  getItemProps,
+  highlightedIndex,
+  selectedItem,
+}) {
+  return (
+    <ul {...getMenuProps()}>
+      {items.map((item, index) => (
+        <MemoListItem
+          key={item.id}
+          getItemProps={getItemProps}
+          item={item}
+          index={index}
+          selectedItem={selectedItem}
+          highlightedIndex={highlightedIndex}
+        >
+          {item.name}
+        </MemoListItem>
+      ))}
+    </ul>
+  );
+}
+// 🐨 Memoize the Menu here using React.memo
+const MemoMenu = React.memo(Menu);
 
 function App() {
-  const forceRerender = useForceRerender()
-  const [inputValue, setInputValue] = React.useState('')
+  const forceRerender = useForceRerender();
+  const [inputValue, setInputValue] = React.useState('');
 
-  const {data: allItems, run} = useAsync({data: [], status: 'pending'})
+  const {data: allItems, run} = useAsync({data: [], status: 'pending'});
   React.useEffect(() => {
-    run(getItems(inputValue))
-  }, [inputValue, run])
-  const items = allItems.slice(0, 100)
+    run(getItems(inputValue));
+  }, [inputValue, run]);
+  const items = allItems.slice(0, 100);
 
   const {
     selectedItem,
@@ -88,7 +102,9 @@ function App() {
           : 'Selection Cleared',
       ),
     itemToString: item => (item ? item.name : ''),
-  })
+  });
+
+  console.log({highlightedIndex});
 
   return (
     <div className="city-app">
@@ -101,7 +117,7 @@ function App() {
             &#10005;
           </button>
         </div>
-        <Menu
+        <MemoMenu
           items={items}
           getMenuProps={getMenuProps}
           getItemProps={getItemProps}
@@ -110,10 +126,10 @@ function App() {
         />
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
 
 /*
 eslint
