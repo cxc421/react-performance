@@ -20,6 +20,7 @@ const initialGrid = Array.from({length: 100}, () =>
 );
 
 function appReducer(state, action) {
+  console.log(action);
   switch (action.type) {
     case 'UPDATE_GRID_CELL': {
       return {...state, grid: updateGridCellState(state.grid, action)};
@@ -105,11 +106,11 @@ function Grid() {
 }
 Grid = React.memo(Grid);
 
-function Cell({row, column}) {
-  const state = useAppState();
-  const cell = state.grid[row][column];
+function CellImpl({cell, row, column}) {
+  console.log(`CellImpl render, row=${row}, column=${column}`);
   const dispatch = useAppDispatch();
   const handleClick = () => dispatch({type: 'UPDATE_GRID_CELL', row, column});
+
   return (
     <button
       className="cell"
@@ -122,6 +123,13 @@ function Cell({row, column}) {
       {Math.floor(cell)}
     </button>
   );
+}
+CellImpl = React.memo(CellImpl);
+
+function Cell({row, column}) {
+  const state = useAppState();
+  const cell = state.grid[row][column];
+  return <CellImpl cell={cell} row={row} column={column} />;
 }
 Cell = React.memo(Cell);
 
